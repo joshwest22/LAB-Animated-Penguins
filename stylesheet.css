@@ -1,0 +1,16 @@
+#xAxis
+{
+    font-size:18px;
+}
+#yAxis
+{
+    font-size:18px;
+}
+.images
+{
+    display: block;
+    float:left;
+    width: 200px;
+    height: 200px;
+    margin: 50px;
+}

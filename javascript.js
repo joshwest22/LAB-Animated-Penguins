@@ -1,14 +1,14 @@
-var screen = {width:400,height:500}
+var screen = {width:1920,height:800}
 var margins = {top:10,right:50,bottom:50,left:50}
-
+//where do the animations go? in code
 //penguin promise to get data
 var penguinPromise = d3.json("penguins/classData.json")
 penguinPromise.then
 (
     function(penguins)
     {
-    console.log("JSON works", penguins);
-    setup(penguins);
+        console.log("JSON works", penguins);
+        setup(penguins);
         makeButtons(penguins);
         
     },
@@ -26,6 +26,12 @@ var setup = function(penguins)
     .append("g")
     .attr("id","graph")
     .attr("transform","translate("+margins.left+","+margins.top+")")
+    //tooltip stuff
+        .on("mouseover", function(quizes, day)
+    {  
+       d3.select("#tooltip").style("left",(d3.event.pageX+20)+"px").style("top",(d3.event.pageY-25)+"px").text("("+day+","+quizes+")")
+    }
+    )
     
     var width = screen.width - margins.left - margins.right
     var height = screen.height - margins.top - margins.bottom
@@ -84,20 +90,43 @@ var drawPenguins = function(penguins,xScale,yScale,cScale,index)
         .attr("r",3)
 }
 
-var makeButtons = function(penguins)
+var makeButtons = function(penguins, xScale, yScale, cScale, index)
     {
+        //adds images
         d3.select("body")
         .selectAll(".images")
-        .data(penguins)
+        .data(penguins, xScale, yScale, cScale, index)
         .enter()
         .append("div")
         .attr("class","images")
         .append("img")
         .attr("src",function(penguin){return "penguins/" + penguin.picture})
         d3.selectAll(".images")
+        //switch graphs
         .on("click",function()
         {
-        console.log("button clicked")
-        //drawPenguins goes here
+        console.log("penguins1",penguins)
+        console.log("xScale",xScale)//undefined rn
+        console.log("index",index)//undefined rn
+        console.log("button clicked") //works
+            d3.select("#graph").remove();//works
+            d3.select("svg").append("g").attr("id", "graph"); //doesn't work
+            d3.select("#graph")
+            .selectAll("circle")
+            .enter()
+            .append("circle")
+        .attr("fill", function(colors) //different color for each penguin
+        {
+            console.log("index",index); console.log("penguins",penguins); return cScale(penguins[index].picture)     
         })
+        .attr("cx",function(quiz,day) //x positions of circles
+        {
+            return xScale(day)  +1  
+        })
+        .attr("cy",function(quiz)
+        {
+            return yScale(quiz.grade)
+        })
+        .attr("r",3)
+    })
     }
