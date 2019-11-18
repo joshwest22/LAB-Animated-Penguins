@@ -8,8 +8,8 @@ penguinPromise.then
     function(penguins)
     {
         console.log("JSON works", penguins);
-        setup(penguins);
-        makeButtons(penguins);
+        setup(penguins,0);//index set to 0 by default
+        
         
     },
     function(err)
@@ -18,7 +18,7 @@ penguinPromise.then
     })
 
 //set up svg, scales, and axes
-var setup = function(penguins)
+var setup = function(penguins,index)
 {
     d3.select("svg")
     .attr("width",screen.width)
@@ -63,16 +63,10 @@ var setup = function(penguins)
         .attr("id","yAxis")
         .attr("transform","translate(25,"+(margins.top)+")")
         .call(yAxis)
-    
-    
-    drawPenguins(penguins,xScale,yScale,cScale,0);
-}
-
-var drawPenguins = function(penguins,xScale,yScale,cScale,index)
-{
-    var groups = d3.select("#graph")
+    //draw the circles for the first time
+    var initialCircles = d3.select("#graph")
         .selectAll("circle")
-        .data(penguins[index].quizes)
+        .data(penguins[index].quizes)//FIXME: problem with index here
         .enter()
         .append("circle")
         .attr("fill", function(colors) //different color for each penguin
@@ -87,46 +81,57 @@ var drawPenguins = function(penguins,xScale,yScale,cScale,index)
         {
             return yScale(quiz.grade)
         })
-        .attr("r",3)
+        .attr("r",5)
+    
+    drawPenguins(penguins,xScale,yScale,cScale,0);
+    makeButtons(penguins,xScale,yScale,cScale); //this was previously in the promise (which was wrong bc xScale, yScale, etc. from setup couldn't be used)
 }
 
-var makeButtons = function(penguins, xScale, yScale, cScale, index)
-    {
-        //adds images
-        d3.select("body")
-        .selectAll(".images")
-        .data(penguins, xScale, yScale, cScale, index)
-        .enter()
-        .append("div")
-        .attr("class","images")
-        .append("img")
-        .attr("src",function(penguin){return "penguins/" + penguin.picture})
-        d3.selectAll(".images")
-        //switch graphs
-        .on("click",function()
-        {
-        console.log("penguins1",penguins)
-        console.log("xScale",xScale)//undefined rn
-        console.log("index",index)//undefined rn
-        console.log("button clicked") //works
-            d3.select("#graph").remove();//works
-            d3.select("svg").append("g").attr("id", "graph"); //doesn't work
-            d3.select("#graph")
-            .selectAll("circle")
-            .enter()
-            .append("circle")
+var drawPenguins = function(penguins,xScale,yScale,cScale,index)
+{
+    var groups = d3.select("#graph")
+        .selectAll("circle")
+        .data(penguins[index].quizes)
+        //.enter()
+        //.append("circle")
+        //put transition() here
+        //don't remove()
+        .transition()
         .attr("fill", function(colors) //different color for each penguin
         {
             console.log("index",index); console.log("penguins",penguins); return cScale(penguins[index].picture)     
         })
         .attr("cx",function(quiz,day) //x positions of circles
         {
-            return xScale(day)  +1  
+            return xScale(day)    
         })
         .attr("cy",function(quiz)
         {
             return yScale(quiz.grade)
         })
-        .attr("r",3)
+        .attr("r",5)   
+}
+
+var makeButtons = function(penguins, xScale, yScale, cScale)
+    {
+        //adds images
+        d3.select("body")
+        .selectAll(".images")
+        .data(penguins)
+        .enter()
+        .append("div")
+        .attr("class","images")
+        .append("img")
+        .attr("src",function(penguin){return "penguins/" + penguin.picture})
+        d3.selectAll(".images")
+        //switch graphs when penguin img clicked
+        .on("click",function(penguin,index)
+        {
+        //console.log("penguinsOnClick",penguins)
+        //console.log("xScale",xScale)//works now
+        console.log("index",index)//works now
+        console.log("button clicked") //works
+            //d3.selectAll("#graph *").remove();//works, but not needed when using animations
+            drawPenguins(penguins, xScale, yScale, cScale,index)
     })
     }
